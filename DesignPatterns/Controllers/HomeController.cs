@@ -1,4 +1,6 @@
-﻿using DesignPatterns.Models;
+﻿using DesignPatterns.Factories;
+using DesignPatterns.ModelBuilders;
+using DesignPatterns.Models;
 using DesignPatterns.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -21,6 +23,21 @@ namespace DesignPatterns.Controllers
             _vehicleRepository = vehicleRepository;
             _logger = logger;
         }
+        private CarFactory chooseFactory(string vehicle)
+        {
+            switch (vehicle)
+            {
+                case "Mustang":
+                    return new FordMustangFactory();
+                case "Explorer":
+                    return new FordExplorerFactory();
+                case "Escape":
+                    return new FordEscapeFactory();
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
 
         public IActionResult Index()
         {
@@ -35,14 +52,21 @@ namespace DesignPatterns.Controllers
         [HttpGet]
         public IActionResult AddMustang()
         {
-            _vehicleRepository.AddVehicle(new Car("red","Ford","Mustang"));
+            var builder = new CarModelBuilder();
+            var newCar = builder.setModel("Mustang")
+                                .setColor("white")
+                                .setBrand("Ford")
+                                .Build();
+
+            _vehicleRepository.AddVehicle(newCar);
             return Redirect("/");
         }
 
         [HttpGet]
         public IActionResult AddExplorer()
         {
-            _vehicleRepository.AddVehicle(new Car("red", "Ford", "Explorer"));
+            var carFactory = chooseFactory("Explorer");
+            _vehicleRepository.AddVehicle(carFactory.Create());
             return Redirect("/");
         }
 
